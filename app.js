@@ -325,18 +325,119 @@ require([
                 
             } catch (error) {
                 console.error("❌ Failed to initialize GeoServer layers:", error);
-                updateLoadingStatus("Failed to load WMS layers", "error");
-                
-                // Show user-friendly error message
-                if (window.statusDiv) {
-                    window.statusDiv.innerHTML = `
-                        <div style="color: #ef4444; text-align: center; padding: 10px;">
-                            <strong>⚠️ WMS Layers Unavailable</strong><br>
-                            <small>GeoServer connection failed. Please check your configuration.</small>
-                        </div>
-                    `;
-                }
+                console.warn("⚠️ Showing demo data instead");
+                showDemoData();
             }
+        }
+        
+        // Show demo data when GeoServer is unavailable
+        function showDemoData() {
+            console.log("🎭 Loading demo data...");
+            updateLoadingStatus("Loading demo data", "info");
+            
+            // Create demo graphics layers
+            const demoRoadsLayer = new GraphicsLayer({
+                id: "demoRoads",
+                title: "Demo Roads"
+            });
+            
+            const demoRailwaysLayer = new GraphicsLayer({
+                id: "demoRailways", 
+                title: "Demo Railways"
+            });
+            
+            // Add demo road graphics for South Asia
+            const demoRoads = [
+                { coords: [74.3587, 31.5204, 74.4587, 31.6204], name: "Lahore Main Road", country: "Pakistan" },
+                { coords: [67.0011, 24.8607, 67.1011, 24.9607], name: "Karachi Highway", country: "Pakistan" },
+                { coords: [90.3563, 23.8103, 90.4563, 23.9103], name: "Dhaka Expressway", country: "Bangladesh" },
+                { coords: [72.8777, 19.0760, 72.9777, 19.1760], name: "Mumbai Road", country: "India" },
+                { coords: [77.2090, 28.6139, 77.3090, 28.7139], name: "Delhi Highway", country: "India" },
+                { coords: [77.5946, 12.9716, 77.6946, 13.0716], name: "Bangalore Road", country: "India" }
+            ];
+            
+            demoRoads.forEach(road => {
+                const line = new Polyline({
+                    paths: [
+                        [road.coords[0], road.coords[1]],
+                        [road.coords[2], road.coords[3]]
+                    ],
+                    spatialReference: { wkid: 4326 }
+                });
+                
+                const roadGraphic = new Graphic({
+                    geometry: line,
+                    symbol: new SimpleLineSymbol({
+                        color: [255, 0, 0, 0.8],
+                        width: 3
+                    }),
+                    attributes: {
+                        name: road.name,
+                        type: "road",
+                        country: road.country
+                    }
+                });
+                
+                demoRoadsLayer.add(roadGraphic);
+            });
+            
+            // Add demo railway graphics
+            const demoRailways = [
+                { coords: [74.3587, 31.5204, 74.4587, 31.6204], name: "Lahore Railway", country: "Pakistan" },
+                { coords: [67.0011, 24.8607, 67.1011, 24.9607], name: "Karachi Railway", country: "Pakistan" },
+                { coords: [90.3563, 23.8103, 90.4563, 23.9103], name: "Dhaka Railway", country: "Bangladesh" },
+                { coords: [72.8777, 19.0760, 72.9777, 19.1760], name: "Mumbai Railway", country: "India" },
+                { coords: [77.2090, 28.6139, 77.3090, 28.7139], name: "Delhi Railway", country: "India" }
+            ];
+            
+            demoRailways.forEach(railway => {
+                const line = new Polyline({
+                    paths: [
+                        [railway.coords[0], railway.coords[1]],
+                        [railway.coords[2], railway.coords[3]]
+                    ],
+                    spatialReference: { wkid: 4326 }
+                });
+                
+                const railwayGraphic = new Graphic({
+                    geometry: line,
+                    symbol: new SimpleLineSymbol({
+                        color: [0, 0, 255, 0.8],
+                        width: 2,
+                        style: "dash"
+                    }),
+                    attributes: {
+                        name: railway.name,
+                        type: "railway",
+                        country: railway.country
+                    }
+                });
+                
+                demoRailwaysLayer.add(railwayGraphic);
+            });
+            
+            // Add layers to map
+            map.add(demoRoadsLayer);
+            map.add(demoRailwaysLayer);
+            
+            // Store references for controls
+            window.demoRoads = demoRoadsLayer;
+            window.demoRailways = demoRailwaysLayer;
+            
+            // Update status
+            updateLoadingStatus("Demo data loaded successfully", "success");
+            
+            // Show demo message
+            if (window.statusDiv) {
+                window.statusDiv.innerHTML = `
+                    <div style="color: #059669; text-align: center; padding: 10px;">
+                        <strong>🎭 Demo Mode Active</strong><br>
+                        <small>Showing demo roads and railways. Connect to GeoServer for live data.</small>
+                    </div>
+                `;
+            }
+            
+            console.log("✅ Demo data loaded successfully");
         }
             
             // Reverse geocoding function
@@ -1376,11 +1477,19 @@ require([
                  if (window.indiaRoads) {
                      window.indiaRoads.visible = e.target.checked;
                  }
+                 // Also handle demo data
+                 if (window.demoRoads) {
+                     window.demoRoads.visible = e.target.checked;
+                 }
              });
              
              document.getElementById('indiaRailways').addEventListener('change', function(e) {
                  if (window.indiaRailways) {
                      window.indiaRailways.visible = e.target.checked;
+                 }
+                 // Also handle demo data
+                 if (window.demoRailways) {
+                     window.demoRailways.visible = e.target.checked;
                  }
              });
              
@@ -1388,11 +1497,19 @@ require([
                  if (window.bdRoads) {
                      window.bdRoads.visible = e.target.checked;
                  }
+                 // Also handle demo data
+                 if (window.demoRoads) {
+                     window.demoRoads.visible = e.target.checked;
+                 }
              });
              
              document.getElementById('bdRailways').addEventListener('change', function(e) {
                  if (window.bdRailways) {
                      window.bdRailways.visible = e.target.checked;
+                 }
+                 // Also handle demo data
+                 if (window.demoRailways) {
+                     window.demoRailways.visible = e.target.checked;
                  }
              });
              
@@ -1400,11 +1517,19 @@ require([
                  if (window.pkRoads) {
                      window.pkRoads.visible = e.target.checked;
                  }
+                 // Also handle demo data
+                 if (window.demoRoads) {
+                     window.demoRoads.visible = e.target.checked;
+                 }
              });
              
              document.getElementById('pkRailways').addEventListener('change', function(e) {
                  if (window.pkRailways) {
                      window.pkRailways.visible = e.target.checked;
+                 }
+                 // Also handle demo data
+                 if (window.demoRailways) {
+                     window.demoRailways.visible = e.target.checked;
                  }
              });
              
