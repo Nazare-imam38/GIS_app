@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>South Asia GIS Dashboard</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4' stroke='%232eb4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(2,2) scale(0.8)'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.arcgis.com/4.27/"></script>
+    <script type="module" src="config.js"></script>
+    <script type="module" src="app.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><span class="icon icon-xl icon-map"></span> South Asia GIS</h2>
+                <p>Professional GIS Dashboard</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- WMS Layers Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon icon-layer"></span>
+                        WMS Layers
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="indiaRoads" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-road"></span>
+                            <span class="layer-name"><span class="icon icon-flag-in"></span> India Roads</span>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="indiaRailways" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-train"></span>
+                            <span class="layer-name"><span class="icon icon-flag-in"></span> India Railways</span>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="bdRoads" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-road"></span>
+                            <span class="layer-name"><span class="icon icon-flag-bd"></span> Bangladesh Roads</span>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="bdRailways" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-train"></span>
+                            <span class="layer-name"><span class="icon icon-flag-bd"></span> Bangladesh Railways</span>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="pkRoads" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-road"></span>
+                            <span class="layer-name"><span class="icon icon-flag-pk"></span> Pakistan Roads</span>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="pkRailways" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div class="layer-info">
+                            <span class="icon icon-train"></span>
+                            <span class="layer-name"><span class="icon icon-flag-pk"></span> Pakistan Railways</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GeoJSON Upload Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon icon-upload"></span>
+                        GeoJSON Upload
+                    </div>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <span class="icon icon-2xl icon-upload"></span>
+                        </div>
+                        <div class="upload-text">Drag & drop GeoJSON file here</div>
+                        <div class="upload-hint">or click to browse</div>
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".geojson,.json" style="display: none;">
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button class="clear-btn" onclick="clearUploadedLayers()"><span class="icon icon-clear"></span> Clear All</button>
+                    </div>
+                    <div class="uploaded-layers" id="uploadedLayers">
+                        <div style="text-align: center; color: #64748b; font-size: 12px;">No layers uploaded yet</div>
+                    </div>
+                </div>
+
+                <!-- Landmarks Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon icon-landmark"></span>
+                        Landmarks
+                    </div>
+                    <div id="landmarksList">
+                        <div style="text-align: center; color: #64748b; font-size: 12px;">Loading landmarks...</div>
+                    </div>
+                </div>
+
+                <!-- Drawing Tools Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon icon-draw"></span>
+                        Drawing Tools
+                    </div>
+                    <div class="drawing-controls">
+                        <button id="drawPoint" class="draw-btn"><span class="icon icon-point"></span> Point</button>
+                        <button id="drawLine" class="draw-btn"><span class="icon icon-line"></span> Line</button>
+                        <button id="drawPolygon" class="draw-btn"><span class="icon icon-polygon"></span> Polygon</button>
+                        <button id="clearDrawings" class="draw-btn clear"><span class="icon icon-clear"></span> Clear</button>
+                        <button id="saveDrawings" class="draw-btn save"><span class="icon icon-save"></span> Save</button>
+                    </div>
+                </div>
+
+                <!-- Search History Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon icon-history"></span>
+                        Search History
+                    </div>
+                    <div id="searchHistoryList">
+                        <div style="text-align: center; color: #64748b; font-size: 12px;">No search history yet</div>
+                    </div>
+                    <button id="clearHistoryBtn" class="clear-history-btn"><span class="icon icon-clear"></span> Clear History</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navbar -->
+            <div class="navbar">
+                            <div class="navbar-brand">
+                <span class="icon icon-xl icon-map"></span>
+                <span>South Asia GIS</span>
+            </div>
+                
+                <div class="navbar-search">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search cities, landmarks, or addresses...">
+                        <button id="searchBtn" class="search-button" onclick="performSearch()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="searchResults" class="search-results" style="display: none;"></div>
+                </div>
+                
+                <div class="navbar-actions">
+                    <button class="sidebar-toggle" id="sidebarToggle">
+                        <span class="icon icon-menu"></span>
+                    </button>
+                    <button class="theme-toggle" id="themeToggle">
+                        <span class="icon icon-sun"></span>
+                    </button>
+                </div>
+            </div>
+
+                <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4" stroke="#2eb4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2>South Asia GIS</h2>
+            <p>Loading map and layers...</p>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <div id="loadingStatus" class="loading-status">
+                <div class="status-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="status-icon">
+                        <path d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="status-text">Initializing map...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="map-container">
+        <div id="mapView"></div>
+    </div>
+        </div>
+    </div>
+
+</body>
+</html>
