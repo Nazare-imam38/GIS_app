@@ -1,3 +1,5 @@
+import configManager from './config.js';
+
 require([
     "esri/Map",
     "esri/views/MapView",
@@ -136,7 +138,7 @@ require([
             // Function to test available WMS layers
             async function testAvailableLayers(wmsUrl) {
                 try {
-                    const capabilitiesUrl = `${wmsUrl}?service=WMS&version=1.1.0&request=GetCapabilities`;
+                    const capabilitiesUrl = `${wmsUrl}?service=WMS&version=${configManager.config.WMS_PARAMS.VERSION}&request=GetCapabilities`;
                     console.log("Testing WMS capabilities at:", capabilitiesUrl);
                     
                     const response = await request(capabilitiesUrl, {
@@ -158,7 +160,7 @@ require([
             }
             
             // Add GeoServer WMS layers
-            function addGeoServerLayers() {
+            async function addGeoServerLayers() {
                 console.log("🔄 Attempting to add GeoServer WMS layers...");
                 
                 // Update status
@@ -166,100 +168,102 @@ require([
                     window.statusDiv.innerHTML = "🔄 Loading WMS layers...";
                 }
                 
-                // GeoServer WMS base URL
-                const wmsUrl = "http://localhost:8080/geoserver/south_asia/wms";
-                
-                // Test available layers first
-                testAvailableLayers(wmsUrl);
-                
-                // Create individual WMS layers (matching Leaflet structure)
+                try {
+                    // Get the best available WMS URL
+                    const wmsUrl = await configManager.getWMSURL();
+                    console.log(`🌐 Using WMS URL: ${wmsUrl}`);
+                    
+                    // Test available layers first
+                    await testAvailableLayers(wmsUrl);
+                    
+                    // Create individual WMS layers (matching Leaflet structure)
                 const indiaRoads = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:IND_roads",
+                        name: configManager.config.LAYERS.INDIA_ROADS,
                         title: "India Roads",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
                 const indiaRailways = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:IND_rails",
+                        name: configManager.config.LAYERS.INDIA_RAILWAYS,
                         title: "India Railways",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
                 const bdRoads = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:bgd_trs_roads_lged",
+                        name: configManager.config.LAYERS.BD_ROADS,
                         title: "Bangladesh Roads",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
                 const bdRailways = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:bgd_trs_railways_lged",
+                        name: configManager.config.LAYERS.BD_RAILWAYS,
                         title: "Bangladesh Railways",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
                 const pkRoads = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:gis_osm_roads_free_1",
+                        name: configManager.config.LAYERS.PK_ROADS,
                         title: "Pakistan Roads",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
                 const pkRailways = new WMSLayer({
                     url: wmsUrl,
                     sublayers: [{
-                        name: "south_asia:gis_osm_railways_free_1",
+                        name: configManager.config.LAYERS.PK_RAILWAYS,
                         title: "Pakistan Railways",
                         visible: true
                     }],
                     customLayerParameters: {
-                        CRS: "EPSG:3857",
-                        format: "image/png",
-                        transparent: true,
-                        version: "1.1.0"
+                        CRS: configManager.config.WMS_PARAMS.CRS,
+                        format: configManager.config.WMS_PARAMS.FORMAT,
+                        transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
+                        version: configManager.config.WMS_PARAMS.VERSION
                     }
                 });
                 
@@ -318,7 +322,22 @@ require([
                         hideSplashScreen();
                     }, 1000);
                 }, 2000);
+                
+            } catch (error) {
+                console.error("❌ Failed to initialize GeoServer layers:", error);
+                updateLoadingStatus("Failed to load WMS layers", "error");
+                
+                // Show user-friendly error message
+                if (window.statusDiv) {
+                    window.statusDiv.innerHTML = `
+                        <div style="color: #ef4444; text-align: center; padding: 10px;">
+                            <strong>⚠️ WMS Layers Unavailable</strong><br>
+                            <small>GeoServer connection failed. Please check your configuration.</small>
+                        </div>
+                    `;
+                }
             }
+        }
             
             // Reverse geocoding function
             async function reverseGeocode(coordinates) {
@@ -1718,10 +1737,74 @@ require([
                 // Add event listener for clear history button
              document.getElementById('clearHistoryBtn').addEventListener('click', clearSearchHistory);
              
-                         // Sidebar toggle functionality
+                         // Sidebar toggle functionality with responsive support
             document.getElementById('sidebarToggle').addEventListener('click', function() {
                 const sidebar = document.getElementById('sidebar');
-                sidebar.classList.toggle('collapsed');
+                const mainContent = document.querySelector('.main-content');
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // On mobile, toggle the sidebar visibility
+                    sidebar.classList.toggle('show');
+                    sidebar.classList.toggle('collapsed');
+                } else {
+                    // On desktop, just toggle collapsed state
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('collapsed');
+                }
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && sidebar.classList.contains('show')) {
+                    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                        sidebar.classList.add('collapsed');
+                    }
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.querySelector('.main-content');
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // On mobile, ensure sidebar is hidden by default
+                    sidebar.classList.remove('show');
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.remove('collapsed');
+                } else {
+                    // On desktop, remove mobile-specific classes
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('collapsed');
+                }
+            });
+            
+            // Prevent zoom on double tap for mobile
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Improve touch handling for mobile
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // Handle orientation change
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    // Trigger resize event to handle layout changes
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
             });
              
                          // Theme toggle functionality

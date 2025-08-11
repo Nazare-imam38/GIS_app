@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Test - South Asia GIS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .url-test {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Configuration Test - South Asia GIS</h1>
+        
+        <div id="status"></div>
+        
+        <h2>Environment Detection</h2>
+        <div id="environment"></div>
+        
+        <h2>URL Configuration</h2>
+        <div id="urls"></div>
+        
+        <h2>Connection Tests</h2>
+        <div id="tests"></div>
+        
+        <button onclick="runTests()">🔄 Run Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+
+    <script type="module">
+        import configManager from './config.js';
+        
+        window.configManager = configManager;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function addResult(elementId, content) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+        }
+        
+        async function runTests() {
+            updateStatus('🔄 Running configuration tests...', 'info');
+            
+            try {
+                // Test environment detection
+                const environment = configManager.detectEnvironment();
+                addResult('environment', `
+                    <div class="status info">
+                        <strong>Detected Environment:</strong> ${environment}<br>
+                        <strong>Hostname:</strong> ${window.location.hostname}<br>
+                        <strong>Protocol:</strong> ${window.location.protocol}
+                    </div>
+                `);
+                
+                // Test URL configuration
+                const baseURL = configManager.getBaseURL();
+                addResult('urls', `
+                    <div class="status info">
+                        <strong>Base URL:</strong> ${baseURL}<br>
+                        <strong>Local URL:</strong> ${configManager.config.LOCAL_URL}<br>
+                        <strong>Public URL:</strong> ${configManager.config.PUBLIC_URL}
+                    </div>
+                `);
+                
+                // Test URL connectivity
+                updateStatus('🌐 Testing URL connectivity...', 'info');
+                
+                const testResults = [];
+                
+                // Test local URL
+                const localWorks = await configManager.testURL(configManager.config.LOCAL_URL);
+                testResults.push({
+                    url: configManager.config.LOCAL_URL,
+                    status: localWorks ? '✅ Working' : '❌ Failed',
+                    type: localWorks ? 'success' : 'error'
+                });
+                
+                // Test public URL
+                const publicWorks = await configManager.testURL(configManager.config.PUBLIC_URL);
+                testResults.push({
+                    url: configManager.config.PUBLIC_URL,
+                    status: publicWorks ? '✅ Working' : '❌ Failed',
+                    type: publicWorks ? 'success' : 'error'
+                });
+                
+                // Get best URL
+                const bestURL = await configManager.getBestURL();
+                testResults.push({
+                    url: `Best URL: ${bestURL}`,
+                    status: '🎯 Selected',
+                    type: 'info'
+                });
+                
+                // Display test results
+                const testHTML = testResults.map(result => `
+                    <div class="url-test">
+                        <strong>${result.url}</strong><br>
+                        <span class="status ${result.type}">${result.status}</span>
+                    </div>
+                `).join('');
+                
+                addResult('tests', testHTML);
+                
+                // Final status
+                if (localWorks || publicWorks) {
+                    updateStatus('✅ Configuration test completed successfully!', 'success');
+                } else {
+                    updateStatus('⚠️ Configuration test completed with warnings. Check your GeoServer setup.', 'warning');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Test failed: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('environment').innerHTML = '';
+            document.getElementById('urls').innerHTML = '';
+            document.getElementById('tests').innerHTML = '';
+            updateStatus('🗑️ Results cleared', 'info');
+        }
+        
+        // Make functions globally available
+        window.runTests = runTests;
+        window.clearResults = clearResults;
+        
+        // Auto-run tests on load
+        setTimeout(runTests, 1000);
+    </script>
+</body>
+</html>

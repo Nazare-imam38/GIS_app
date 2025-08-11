@@ -1,167 +1,169 @@
-# 🌍 South Asia GIS Dashboard
+# South Asia GIS Dashboard
 
-A professional GIS (Geographic Information System) dashboard focused on South Asia, featuring interactive mapping, geocoding, GeoJSON support, and drawing tools.
+A responsive web-based GIS dashboard for visualizing South Asian geographic data using GeoServer WMS layers.
 
-## 🚀 Live Demo
+## 🚀 Features
 
-**[View Live Application](https://yourusername.github.io/south-asia-gis-app)**
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **WMS Layer Management**: Toggle visibility of roads and railways for India, Bangladesh, and Pakistan
+- **GeoJSON Upload**: Upload and visualize custom GeoJSON files
+- **Interactive Drawing Tools**: Draw points, lines, and polygons on the map
+- **Search Functionality**: Search for cities and landmarks with reverse geocoding
+- **Landmarks Database**: Pre-loaded landmarks for South Asian countries
+- **Search History**: Track and manage search history
+- **Dark/Light Theme**: Toggle between themes
 
-## ✨ Features
-
-### 🗺️ **Interactive Mapping**
-- ArcGIS JavaScript API integration
-- South Asia focused map with Pakistan, India, and Bangladesh
-- Responsive design with modern UI/UX
-
-### 🔍 **Advanced Geocoding**
-- **GeoServer Integration:** Local geocoding with South Asia data
-- **Nominatim Fallback:** Global geocoding when GeoServer unavailable
-- **Reverse Geocoding:** Click anywhere on map to get address
-- **Search History:** Cached search results with navigation
-
-### 📊 **GeoJSON Support**
-- **Drag & Drop Upload:** Easy file upload interface
-- **Dynamic Styling:** Automatic styling based on feature properties
-- **Multiple Formats:** Points, lines, polygons, and complex geometries
-- **Layer Management:** Toggle visibility and remove layers
-
-### 🎨 **Drawing Tools**
-- **Sketch Widget:** Freehand drawing on the map
-- **Multiple Tools:** Points, lines, and polygons
-- **Save/Export:** Download drawings as GeoJSON
-- **Clear Functionality:** Remove all drawings
-
-### 🏛️ **Predefined Landmarks**
-- **5 Major Landmarks:** Lahore Fort, Taj Mahal, Badshahi Mosque, Red Fort, Ahsan Manzil
-- **Interactive Navigation:** Click to navigate to landmarks
-- **Detailed Information:** Country, description, and coordinates
-
-### 🗂️ **Layer Management**
-- **WMS Layers:** South Asia roads and railways
-- **Country-specific Layers:** Pakistan, India, Bangladesh
-- **Toggle Controls:** Show/hide individual layers
-
-## 🛠️ Technology Stack
-
-- **Frontend:** HTML5, CSS3, JavaScript (ES6+)
-- **Mapping:** ArcGIS JavaScript API 4.27
-- **Geocoding:** GeoServer Geocoder + Nominatim API
-- **Styling:** Custom CSS with responsive design
-- **Icons:** Custom SVG icons and emojis
-
-## 📁 Project Structure
-
-```
-south-asia-gis-app/
-├── index.html          # Main application file
-├── styles.css          # Complete styling and responsive design
-├── app.js             # Core application logic
-├── README.md          # Project documentation
-└── .gitignore         # Git ignore rules
-```
-
-## 🚀 Quick Start
+## 🛠️ Setup Instructions
 
 ### Prerequisites
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-- Internet connection (for ArcGIS API and geocoding)
+
+1. **GeoServer Installation**: Make sure GeoServer is running on your local machine
+2. **ngrok** (for sharing with others): Install ngrok for tunneling
 
 ### Local Development
-1. **Clone the repository:**
+
+1. **Start GeoServer**:
    ```bash
-   git clone https://github.com/yourusername/south-asia-gis-app.git
-   cd south-asia-gis-app
+   # Navigate to your GeoServer installation
+   cd /path/to/geoserver
+   ./bin/startup.sh  # or startup.bat on Windows
    ```
 
-2. **Start local server:**
+2. **Configure GeoServer**:
+   - Create a workspace named `south_asia`
+   - Add your WMS layers to this workspace
+   - Ensure layers are published and accessible
+
+3. **Update Configuration**:
+   - Open `config.js`
+   - Update the `PUBLIC_URL` with your current ngrok URL
+   - Verify layer names match your GeoServer setup
+
+4. **Start ngrok** (for sharing):
    ```bash
-   # Using Python
+   ngrok http 8080
+   ```
+
+5. **Update ngrok URL**:
+   - Copy the ngrok URL (e.g., `https://abc123.ngrok-free.app`)
+   - Update `PUBLIC_URL` in `config.js`:
+   ```javascript
+   PUBLIC_URL: "https://abc123.ngrok-free.app/geoserver"
+   ```
+
+6. **Run the Application**:
+   - Open `index.html` in a web browser
+   - Or serve using a local server:
+   ```bash
    python -m http.server 8000
-   
-   # Using Node.js
-   npx http-server -p 3000
+   # or
+   npx serve .
    ```
-
-3. **Open in browser:**
-   - Python: http://localhost:8000
-   - Node.js: http://localhost:3000
-
-## 🎯 Key Features Explained
-
-### GeoServer Integration
-The application is designed to work with a local GeoServer instance:
-- **URL:** `http://localhost:8080/geoserver`
-- **WMS Layers:** South Asia roads and railways
-- **Geocoding:** Local address lookup with fallback to Nominatim
-
-### GeoJSON Styling
-Automatic styling based on feature properties:
-- **Points:** Custom icons for hospitals, schools, landmarks, etc.
-- **Lines:** Color-coded highways, primary, secondary roads
-- **Polygons:** Patterned fills for industrial, residential, commercial areas
-
-### Search Functionality
-- **Smart Search:** Type to get instant recommendations
-- **Popular Cities:** Quick access to major South Asian cities
-- **History Management:** Persistent search history with localStorage
-
-## 🌐 Browser Support
-
-- ✅ Chrome 80+
-- ✅ Firefox 75+
-- ✅ Safari 13+
-- ✅ Edge 80+
-
-## 📱 Responsive Design
-
-The application is fully responsive and works on:
-- Desktop computers
-- Tablets
-- Mobile phones
-- Touch devices
 
 ## 🔧 Configuration
 
-### GeoServer Setup
-To enable full GeoServer functionality:
+### Environment Detection
 
-1. **Install GeoServer** on your server
-2. **Load South Asia OSM data** as WMS/WMTS layers
-3. **Install GeoServer Geocoder plugin**
-4. **Configure address locator** with South Asia data
-5. **Update URLs** in `app.js` if needed
+The application automatically detects the environment:
 
-### Customization
-- **Landmarks:** Add/modify landmarks in the `landmarks` array in `app.js`
-- **Styling:** Customize colors and icons in `styles.css`
-- **GeoJSON Styling:** Modify styling functions in `app.js`
+- **Localhost**: Uses `http://localhost:8080/geoserver`
+- **ngrok/Public**: Uses the configured `PUBLIC_URL`
 
-## 🤝 Contributing
+### Layer Configuration
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Update layer names in `config.js` to match your GeoServer setup:
 
-## 📄 License
+```javascript
+LAYERS: {
+    INDIA_ROADS: "south_asia:IND_roads",
+    INDIA_RAILWAYS: "south_asia:IND_rails", 
+    BD_ROADS: "south_asia:bgd_trs_roads_lged",
+    BD_RAILWAYS: "south_asia:bgd_trs_railways_lged",
+    PK_ROADS: "south_asia:gis_osm_roads_free_1",
+    PK_RAILWAYS: "south_asia:gis_osm_railways_free_1"
+}
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### WMS Parameters
 
-## 🙏 Acknowledgments
+Configure WMS parameters as needed:
 
-- **ArcGIS JavaScript API** for mapping capabilities
-- **Nominatim** for geocoding services
-- **OpenStreetMap** for base map data
-- **GeoServer** for WMS/WMTS services
+```javascript
+WMS_PARAMS: {
+    VERSION: "1.1.0",
+    FORMAT: "image/png",
+    CRS: "EPSG:3857",
+    TRANSPARENT: true
+}
+```
+
+## 📱 Responsive Design
+
+The application is fully responsive with breakpoints:
+
+- **Desktop (>1200px)**: Full sidebar with all features
+- **Tablet (768px-1200px)**: Compact sidebar
+- **Mobile (≤768px)**: Overlay sidebar with touch-optimized interface
+- **Small Mobile (≤480px)**: Optimized for very small screens
+
+## 🔍 Troubleshooting
+
+### WMS Layers Not Loading
+
+1. **Check GeoServer Status**:
+   - Ensure GeoServer is running on port 8080
+   - Verify workspace `south_asia` exists
+   - Check layer names match configuration
+
+2. **Check ngrok Configuration**:
+   - Verify ngrok is running and accessible
+   - Update `PUBLIC_URL` in `config.js`
+   - Test ngrok URL in browser
+
+3. **Check Browser Console**:
+   - Look for CORS errors
+   - Check network requests to GeoServer
+   - Verify layer capabilities response
+
+### Common Issues
+
+- **404 Errors**: Layer names don't match GeoServer
+- **CORS Errors**: GeoServer CORS not configured
+- **Connection Timeout**: ngrok tunnel expired or incorrect URL
+
+## 🎯 Usage
+
+### For Local Development
+1. Use `localhost` in browser
+2. Application automatically uses local GeoServer
+3. All features work locally
+
+### For Sharing with Others
+1. Start ngrok: `ngrok http 8080`
+2. Update `PUBLIC_URL` in `config.js`
+3. Share the ngrok URL
+4. Others can access your local GeoServer via ngrok
+
+## 📁 File Structure
+
+```
+├── index.html          # Main HTML file
+├── app.js             # Main JavaScript application
+├── config.js          # Configuration management
+├── styles.css         # Responsive CSS styles
+└── README.md          # This file
+```
+
+## 🔄 Updates
+
+When you restart ngrok:
+1. Get the new ngrok URL
+2. Update `PUBLIC_URL` in `config.js`
+3. Refresh the application
 
 ## 📞 Support
 
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Review the code comments
-
----
-
-**Built with ❤️ for South Asia GIS professionals**
+For issues related to:
+- **GeoServer**: Check GeoServer logs and documentation
+- **ngrok**: Visit ngrok documentation
+- **Application**: Check browser console for errors
