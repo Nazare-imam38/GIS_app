@@ -7,7 +7,7 @@ const config = {
     LOCAL_URL: "http://localhost:8080/geoserver",
     
     // Public ngrok URL (update this when you start a new ngrok session)
-    PUBLIC_URL: "https://d6b05216f156.ngrok-free.app/geoserver",
+    PUBLIC_URL: "https://bd733bfe3544.ngrok-free.app/geoserver",
     
     // Workspace name
     WORKSPACE: "south_asia",
@@ -69,11 +69,26 @@ function getBaseURL() {
 async function testURL(url) {
     try {
         const testUrl = `${url}/${config.WORKSPACE}/wms?service=WMS&version=${config.WMS_PARAMS.VERSION}&request=GetCapabilities`;
+        console.log(`🔍 Testing URL: ${testUrl}`);
+        
         const response = await fetch(testUrl, {
             method: 'GET',
             mode: 'cors',
-            timeout: 5000
+            timeout: 10000, // Increased timeout for mobile
+            headers: {
+                'Accept': 'application/xml, text/xml, */*',
+                'User-Agent': 'SouthAsiaGIS/1.0'
+            }
         });
+        
+        // Check if response contains ngrok warning page
+        const text = await response.text();
+        if (text.includes('ngrok') && (text.includes('ERR_NGROK_6024') || text.includes('warning'))) {
+            console.warn(`⚠️ ngrok warning page detected for ${url}`);
+            return false;
+        }
+        
+        console.log(`✅ URL test successful for ${url}`);
         return response.ok;
     } catch (error) {
         console.warn(`❌ URL test failed for ${url}:`, error.message);
@@ -84,6 +99,8 @@ async function testURL(url) {
 // Get the best available URL with fallback
 async function getBestURL() {
     const primaryURL = getBaseURL();
+    console.log(`🌐 Environment detected: ${detectEnvironment()}`);
+    console.log(`🎯 Primary URL: ${primaryURL}`);
     
     // Test primary URL
     const primaryWorks = await testURL(primaryURL);
@@ -94,6 +111,7 @@ async function getBestURL() {
     
     // Fallback to localhost if primary fails
     if (primaryURL !== config.LOCAL_URL) {
+        console.log(`🔄 Trying localhost fallback...`);
         const localWorks = await testURL(config.LOCAL_URL);
         if (localWorks) {
             console.log(`⚠️ Primary URL failed, using localhost: ${config.LOCAL_URL}`);
