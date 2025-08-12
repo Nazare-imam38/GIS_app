@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External WMS Test - South Asia GIS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .device-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 External WMS Connection Test</h1>
+        
+        <div class="device-info">
+            <h3>📱 Device Information</h3>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Platform:</strong> <span id="platform"></span></p>
+            <p><strong>Is Mobile:</strong> <span id="isMobile"></span></p>
+            <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+        </div>
+        
+        <div id="status"></div>
+        
+        <h2>🔗 Connection Tests</h2>
+        <div id="tests"></div>
+        
+        <button onclick="runAllTests()">🔄 Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+
+    <script>
+        // Display device information
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('platform').textContent = navigator.platform;
+        document.getElementById('isMobile').textContent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Yes' : 'No';
+        document.getElementById('currentUrl').textContent = window.location.href;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function addTestResult(testName, result, details = '') {
+            const testsDiv = document.getElementById('tests');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = `
+                <h4>${testName}</h4>
+                <div class="status ${result ? 'success' : 'error'}">
+                    ${result ? '✅ PASSED' : '❌ FAILED'}
+                </div>
+                ${details ? `<p><small>${details}</small></p>` : ''}
+            `;
+            testsDiv.appendChild(resultDiv);
+        }
+        
+        async function testNgrokConnection() {
+            try {
+                const url = 'https://bd733bfe3544.ngrok-free.app/geoserver/south_asia/wms?service=WMS&version=1.1.0&request=GetCapabilities';
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 15000
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('ngrok') && text.includes('ERR_NGROK_6024')) {
+                        addTestResult('Ngrok Connection', false, 'Ngrok warning page detected - user needs to click through');
+                        return false;
+                    }
+                    addTestResult('Ngrok Connection', true, `Status: ${response.status} - GeoServer responding`);
+                    return true;
+                } else {
+                    addTestResult('Ngrok Connection', false, `Status: ${response.status} - ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('Ngrok Connection', false, `Error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function testDeployedApp() {
+            try {
+                const url = 'https://gis-web-app-fawn.vercel.app/';
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 10000
+                });
+                
+                if (response.ok) {
+                    addTestResult('Deployed App Access', true, `Status: ${response.status} - App loads successfully`);
+                    return true;
+                } else {
+                    addTestResult('Deployed App Access', false, `Status: ${response.status} - ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('Deployed App Access', false, `Error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function testWMSLayerLoading() {
+            try {
+                // Simulate what the app does when loading WMS layers
+                const wmsUrl = 'https://bd733bfe3544.ngrok-free.app/geoserver/south_asia/wms';
+                const testUrl = `${wmsUrl}?service=WMS&version=1.1.0&request=GetCapabilities`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 15000
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('WMS_Capabilities') || text.includes('GetCapabilities')) {
+                        addTestResult('WMS Layer Loading', true, 'WMS capabilities retrieved successfully');
+                        return true;
+                    } else {
+                        addTestResult('WMS Layer Loading', false, 'Response does not contain WMS capabilities');
+                        return false;
+                    }
+                } else {
+                    addTestResult('WMS Layer Loading', false, `Status: ${response.status} - ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('WMS Layer Loading', false, `Error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function testCORS() {
+            try {
+                const url = 'https://bd733bfe3544.ngrok-free.app/geoserver/south_asia/wms';
+                const response = await fetch(url, {
+                    method: 'OPTIONS',
+                    mode: 'cors',
+                    timeout: 10000
+                });
+                
+                const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
+                if (corsHeaders) {
+                    addTestResult('CORS Configuration', true, `CORS headers present: ${corsHeaders}`);
+                    return true;
+                } else {
+                    addTestResult('CORS Configuration', false, 'No CORS headers found');
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('CORS Configuration', false, `Error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function runAllTests() {
+            updateStatus('🔄 Running external connection tests...', 'info');
+            
+            // Clear previous results
+            document.getElementById('tests').innerHTML = '';
+            
+            const results = [];
+            
+            // Run tests
+            results.push(await testNgrokConnection());
+            results.push(await testDeployedApp());
+            results.push(await testWMSLayerLoading());
+            results.push(await testCORS());
+            
+            // Summary
+            const passed = results.filter(r => r).length;
+            const total = results.length;
+            
+            if (passed === total) {
+                updateStatus(`✅ All tests passed! (${passed}/${total})`, 'success');
+            } else {
+                updateStatus(`⚠️ Some tests failed (${passed}/${total}). Check results below.`, 'warning');
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('tests').innerHTML = '';
+            updateStatus('🗑️ Results cleared', 'info');
+        }
+        
+        // Auto-run tests on load
+        setTimeout(runAllTests, 1000);
+    </script>
+</body>
+</html>
