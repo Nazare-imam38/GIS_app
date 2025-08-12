@@ -69,11 +69,24 @@ function getBaseURL() {
 async function testURL(url) {
     try {
         const testUrl = `${url}/${config.WORKSPACE}/wms?service=WMS&version=${config.WMS_PARAMS.VERSION}&request=GetCapabilities`;
+        
+        // Detect mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const timeout = isMobile ? 15000 : 10000; // Longer timeout for mobile
+        
         const response = await fetch(testUrl, {
             method: 'GET',
             mode: 'cors',
-            timeout: 5000
+            timeout: timeout
         });
+        
+        // Check if response contains ngrok warning page
+        const text = await response.text();
+        if (text.includes('ngrok') && text.includes('ERR_NGROK_6024')) {
+            console.warn(`⚠️ ngrok warning page detected for ${url}`);
+            return false;
+        }
+        
         return response.ok;
     } catch (error) {
         console.warn(`❌ URL test failed for ${url}:`, error.message);

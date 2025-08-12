@@ -168,6 +168,10 @@ require([
                     window.statusDiv.innerHTML = "🔄 Loading WMS layers...";
                 }
                 
+                // Detect mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                console.log(`📱 Device type: ${isMobile ? 'Mobile' : 'Desktop'}`);
+                
                 try {
                     // Get the best available WMS URL
                     const wmsUrl = await configManager.getWMSURL();
@@ -188,7 +192,13 @@ require([
                         CRS: configManager.config.WMS_PARAMS.CRS,
                         format: configManager.config.WMS_PARAMS.FORMAT,
                         transparent: configManager.config.WMS_PARAMS.TRANSPARENT,
-                        version: configManager.config.WMS_PARAMS.VERSION
+                        version: configManager.config.WMS_PARAMS.VERSION,
+                        // Mobile-specific parameters
+                        ...(isMobile && {
+                            TILED: true,
+                            TILESIZE: 256,
+                            BUFFER: 0
+                        })
                     }
                 });
                 
@@ -269,21 +279,36 @@ require([
                 
                 // Add layers to map with error handling
                 function addLayerWithErrorHandling(layer, layerName) {
-                    layer.load().then(() => {
-                        map.add(layer);
-                        console.log(`✅ ${layerName} layer added successfully`);
-                        updateLoadingStatus(`${layerName} loaded successfully`, "success");
-                    }).catch(error => {
-                        console.error(`❌ Failed to load ${layerName} layer:`, error);
-                        console.error(`❌ Layer details:`, layer);
-                        updateLoadingStatus(`${layerName} failed to load`, "error");
-                    });
+                    const timeout = isMobile ? 15000 : 10000; // Longer timeout for mobile
+                    
+                    const loadPromise = layer.load();
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), timeout)
+                    );
+                    
+                    Promise.race([loadPromise, timeoutPromise])
+                        .then(() => {
+                            map.add(layer);
+                            console.log(`✅ ${layerName} layer added successfully`);
+                            updateLoadingStatus(`${layerName} loaded successfully`, "success");
+                        })
+                        .catch(error => {
+                            console.error(`❌ Failed to load ${layerName} layer:`, error);
+                            console.error(`❌ Layer details:`, layer);
+                            
+                            // Mobile-specific error message
+                            const errorMsg = isMobile 
+                                ? `${layerName} failed to load (mobile network issue)`
+                                : `${layerName} failed to load`;
+                            
+                            updateLoadingStatus(errorMsg, "error");
+                        });
                 }
                 
                 // Add layers with timeout to prevent blocking
                 setTimeout(() => {
                     addLayerWithErrorHandling(indiaRoads, "India Roads");
-                }, 100);
+                }, isMobile ? 500 : 100); // Longer timeout for mobile
                 
                 setTimeout(() => {
                     addLayerWithErrorHandling(indiaRailways, "India Railways");
