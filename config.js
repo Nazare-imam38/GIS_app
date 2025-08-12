@@ -7,7 +7,7 @@ const config = {
     LOCAL_URL: "http://localhost:8080/geoserver",
     
     // Public ngrok URL (update this when you start a new ngrok session)
-    PUBLIC_URL: "https://a6120d923241.ngrok-free.app/geoserver",
+    PUBLIC_URL: "https://d6b05216f156.ngrok-free.app/geoserver",
     
     // Workspace name
     WORKSPACE: "south_asia",
