@@ -131,7 +131,10 @@
                 const response = await fetch(url, {
                     method: 'GET',
                     mode: 'cors',
-                    timeout: 10000
+                    timeout: 10000,
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true' // Skip ngrok warning page
+                    }
                 });
                 
                 const text = await response.text();

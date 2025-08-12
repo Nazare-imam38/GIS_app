@@ -77,7 +77,8 @@ async function testURL(url) {
             timeout: 10000, // Increased timeout for mobile
             headers: {
                 'Accept': 'application/xml, text/xml, */*',
-                'User-Agent': 'SouthAsiaGIS/1.0'
+                'User-Agent': 'SouthAsiaGIS/1.0',
+                'ngrok-skip-browser-warning': 'true' // Skip ngrok warning page
             }
         });
         
